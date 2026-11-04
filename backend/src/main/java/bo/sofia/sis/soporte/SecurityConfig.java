@@ -15,12 +15,13 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 @Configuration @EnableMethodSecurity
 public class SecurityConfig {
- @Bean UserDetailsService users(@Value("${sofia.operator-password}") String op,@Value("${sofia.quality-password}") String qa,@Value("${sofia.reader-password}") String ro) {
+ @Bean UserDetailsService users(@Value("${sofia.operator-password}") String op,@Value("${sofia.quality-password}") String qa,@Value("${sofia.reader-password}") String ro,@Value("${sofia.supervisor-password}") String sv) {
   var encoder=new BCryptPasswordEncoder();
-  if(op.length()<12 || qa.length()<12 || ro.length()<12) throw new IllegalArgumentException("Claves de al menos 12 caracteres requeridas");
+  if(op.length()<12 || qa.length()<12 || ro.length()<12 || sv.length()<12) throw new IllegalArgumentException("Claves de al menos 12 caracteres requeridas");
   return new InMemoryUserDetailsManager(
    User.withUsername("operador").password("{bcrypt}"+encoder.encode(op)).roles("OPERADOR","LECTOR").build(),
    User.withUsername("calidad").password("{bcrypt}"+encoder.encode(qa)).roles("CALIDAD","LECTOR").build(),
+   User.withUsername("supervisor").password("{bcrypt}"+encoder.encode(sv)).roles("SUPERVISOR","LECTOR").build(),
    User.withUsername("consulta").password("{bcrypt}"+encoder.encode(ro)).roles("LECTOR").build());
  }
  @Bean SecurityFilterChain security(HttpSecurity http) throws Exception {

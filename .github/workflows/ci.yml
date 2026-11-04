@@ -26,6 +26,7 @@ jobs:
           OPERATOR_PASSWORD: ci-operator-password
           QUALITY_PASSWORD: ci-quality-password
           READER_PASSWORD: ci-reader-password
+          SUPERVISOR_PASSWORD: ci-supervisor-password
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: npm ci && npm run build

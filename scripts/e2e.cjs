@@ -3,7 +3,7 @@ const fs=require('fs');const path=require('path');const assert=require('assert')
 const root=path.resolve(__dirname,'..');
 process.chdir(root);fs.mkdirSync('work',{recursive:true});
 const env=Object.fromEntries(fs.readFileSync(path.join(root,'.env'),'utf8').trim().split(/\r?\n/).map(l=>{const i=l.indexOf('=');return [l.slice(0,i),l.slice(i+1)];}));
-const passwords={operador:env.OPERATOR_PASSWORD,calidad:env.QUALITY_PASSWORD,consulta:env.READER_PASSWORD};
+const passwords={operador:env.OPERATOR_PASSWORD,calidad:env.QUALITY_PASSWORD,consulta:env.READER_PASSWORD,supervisor:env.SUPERVISOR_PASSWORD};
 async function api(route,body,user='operador',key=crypto.randomUUID()){
  const r=await fetch('http://localhost:8080/api/v1'+route,{method:body?'POST':'GET',headers:{Authorization:'Basic '+Buffer.from(user+':'+passwords[user]).toString('base64'),'Content-Type':'application/json','X-Requested-With':'SIS-SOFIA','Idempotency-Key':key},...(body?{body:JSON.stringify(body)}:{})});
  const txt=await r.text();const d=txt?JSON.parse(txt):{};if(!r.ok)throw new Error(JSON.stringify({route,status:r.status,data:d}));return d;
