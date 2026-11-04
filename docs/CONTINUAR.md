@@ -10,7 +10,7 @@ Lea README.md, ARQUITECTURA.md, VALIDACION.md y el informe Proyecto3_Dashboard_S
 |---|---|---|
 | P0 académico | Cargar un conjunto autorizado y documentar su procedencia | Conciliar cantidades contra respaldo y presentar sin cifras inventadas como empresariales |
 | P0 académico | Medir interacción en equipo de exposición y probar usuarios | p95 menor de 2 s, filtros y teclado; registrar máquina, volumen y concurrencia |
-| P0 operativo | Ajustes/contramovimientos con doble aprobación | Error corregible sin borrar hechos ni generar merma falsa |
+| ~~P0 operativo~~ | ~~Ajustes/contramovimientos con doble aprobación~~ **Implementado en V2** | Error corregible sin borrar hechos ni generar merma falsa. Pendiente: corrección de atributos de lote (código/vencimiento) y separación de personas reales (hoy por cuenta) |
 | P0 producción | Keycloak OIDC/PKCE, MFA, HTTPS y cuentas nominales | Sesión expirada/revocada bloqueada; Operador nunca libera; no secretos en Git |
 | P0 producción | Roles DB, backups y restauración ensayada | App sin DDL; BI solo lectura; recuperación con evidencia, no RTO/RPO supuestos |
 | P1 | Extraer calidad, ventas y compras a módulos; Spring Modulith | Prueba automática impide importar internal de otro módulo |

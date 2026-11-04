@@ -2,6 +2,17 @@
 
 MVP funcional del dashboard de inventarios: React 18 + TypeScript + Vite + React Query; Java 21 + Spring Boot 3 + Spring Data JPA/JDBC; PostgreSQL 16 + Flyway. Los registros se guardan en PostgreSQL. **La base de uso normal comienza vacía**, sin indicadores prefabricados.
 
+## Arranque en macOS / Linux
+
+Con Docker Desktop iniciado, en una terminal en esta carpeta:
+
+```bash
+./scripts/init.sh
+docker compose up -d --build
+```
+
+Si ya tenía un `.env` de la v0.1, vuelva a ejecutar `init.sh` (o `init.ps1`): conserva las claves existentes y agrega `SUPERVISOR_PASSWORD`.
+
 ## Arranque en Windows
 
 Requisito: Docker Desktop iniciado con contenedores Linux. Abra PowerShell en esta carpeta:
@@ -21,6 +32,7 @@ Las contraseñas aleatorias se generan una vez en `.env`, no se incluyen en Git 
 | operador | OPERATOR_PASSWORD | Catálogos, recepción, despacho y conteos |
 | calidad | QUALITY_PASSWORD | Liberación, retención y mermas |
 | consulta | READER_PASSWORD | Dashboard, saldos y trazabilidad |
+| supervisor | SUPERVISOR_PASSWORD | Aprobar o rechazar ajustes solicitados por otro usuario |
 
 Los puertos publicados están limitados a 127.0.0.1. Esta autenticación local es transitoria; para uso en red se requiere HTTPS e IdP corporativo. No copie `.env` a capturas o repositorios.
 
@@ -32,9 +44,22 @@ Los puertos publicados están limitados a 127.0.0.1. Esta autenticación local e
 4. Ingrese como operador. Registre un despacho con vida útil mínima. El servidor elige y distribuye las cantidades según FEFO, sin permitir sobreventa.
 5. Registre un conteo físico. El conteo conserva el saldo esperado; no ajusta existencias automáticamente.
 6. Si corresponde, calidad registra la merma real y su motivo. La cantidad se descuenta del inventario.
-7. Consulte el dashboard. Filtre por fecha, centro y producto. Las barras de producto y de fecha cambian los filtros globales. En Trazabilidad puede descargar los registros de un lote como JSON.
+7. Si un registro tiene un error de cantidad, en **Operaciones → Ajuste de movimiento** solicite la cantidad correcta con motivo y respaldo. Ingrese como supervisor para aprobarla o rechazarla. El registro original no se borra.
+8. Consulte el dashboard. Filtre por fecha, centro y producto. Las barras de producto y de fecha cambian los filtros globales. En Trazabilidad puede descargar los registros de un lote como JSON.
 
 Un denominador cero se muestra como **Sin datos**, no como 0 % ni 100 %. Los datos de las pruebas están en `sofia_test`, separados de `sofia`.
+
+## Demostración con datos simulados
+
+Para exponer el dashboard con contenido sin tocar la base normal, después de `init`:
+
+```bash
+docker compose --profile demo up -d --build
+```
+
+Compose crea la base `sofia_demo` (servicio `demo-db`), el backend demo aplica las migraciones Flyway y `demo-seed` carga 90 días de operación **simulada**: 3 centros, 10 productos, recepciones, liberaciones, despachos FEFO, mermas con motivo, conteos semanales, un ajuste aprobado y otro pendiente. Las fechas se calculan desde el día de la carga, y la semilla es fija, así que cada equipo obtiene el mismo conjunto. Volver a ejecutar el comando no duplica datos.
+
+La demo queda en http://localhost:8089 con las credenciales del `.env` local, y la interfaz muestra la etiqueta **Datos de demostración**. Todos los registros llevan el prefijo `DEMO`; son ficticios y no representan resultados de la empresa. Para regenerarla, borre la base y repita el comando: `docker compose exec db dropdb -U sofia sofia_demo`, o use `./scripts/demo.sh --reset` en macOS/Linux. El generador es [demo/demo_seed.py](demo/demo_seed.py) y respeta las mismas reglas que la API: retención y liberación, FEFO con vida mínima, merma no mayor al saldo y conteos con el saldo esperado.
 
 ## Conexión con DBeaver
 

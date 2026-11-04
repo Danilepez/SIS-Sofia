@@ -48,7 +48,13 @@ Un advisory lock transaccional único serializa todas las operaciones de stock. 
 
 Idempotency-Key UUID se exige en recepción, calidad, despacho, merma y conteo. Se guarda huella SHA-256 de usuario, tipo y payload, junto a la respuesta. Repetición idéntica devuelve la respuesta; cambio de payload produce 409. Esas escrituras y la respuesta se confirman o revierten juntas. Aún no hay vencimiento/purga de claves ni outbox.
 
-Los triggers rechazan UPDATE/DELETE sobre movimientos, conteos y decisiones. La administración de base puede alterar el esquema, por lo que esto no equivale a auditoría criptográfica. El catálogo no tiene edición; los ajustes/contramovimientos auditados son un pendiente prioritario para corregir errores sin borrar historia.
+Los triggers rechazan UPDATE/DELETE sobre movimientos, conteos y decisiones. La administración de base puede alterar el esquema, por lo que esto no equivale a auditoría criptográfica. El catálogo no tiene edición.
+
+## Ajustes con doble aprobación (V2)
+
+Un error de captura en recepción, despacho o merma se corrige con un ajuste, sin UPDATE ni merma ficticia. `inventario.ajuste` guarda la solicitud (movimiento, kg vigente, kg correcto, motivo, documento, usuario) y `inventario.ajuste_resolucion` la decisión (aprobado, comentario, usuario); ambas tablas tienen trigger de inmutabilidad. Operador solicita sobre recepciones y despachos; Calidad sobre mermas; el usuario `supervisor` resuelve y nunca puede ser quien solicitó.
+
+La vista `inventario.movimiento_efectivo` aplica la última corrección aprobada como `kg_efectivo`. `inventario.saldo` y `analitica.hecho_movimiento` usan esa cantidad, re-expresando el hecho en su **fecha original**: un período ya consultado puede cambiar al aprobarse la corrección, y la evidencia del cambio queda en la trazabilidad del lote. Una línea anulada (0 kg) desaparece de los hechos y deja de contar en el denominador FEFO. Reglas: un despacho solo se reduce o anula (una salida extra debe ser un despacho FEFO nuevo); un ajuste no puede dejar saldo negativo, comprobado al solicitar y otra vez al aprobar; un movimiento admite una sola solicitud pendiente; si el movimiento cambió entre solicitud y aprobación, la aprobación se rechaza. Errores en atributos del lote (código, vencimiento) y en conteos no se corrigen por esta vía: el conteo se repite y rige el último.
 
 ## Seguridad y despliegue
 

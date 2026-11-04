@@ -61,6 +61,40 @@ class InventoryIntegrationTest {
  @Test void lossCannotExceedStock()throws Exception {var id=receive("LOSS",10,10);postAs("/mermas",Map.of("lote",id,"kg",11,"motivo","Prueba","documento","TEST"),"CALIDAD",UUID.randomUUID()).andExpect(status().isConflict());assertEquals(10,dashboard().at("/stock/fisico").asDouble());}
  @Test void filterExcludesOtherCentersAndValidatesDates()throws Exception {receive("FILTER",10,10);String date=InventoryService.today().toString();mvc.perform(get("/api/v1/dashboard").with(user("r").roles("LECTOR")).param("desde",date).param("hasta",date).param("centro",UUID.randomUUID().toString())).andExpect(status().isOk()).andExpect(jsonPath("$.actual.ingreso").value(0));mvc.perform(get("/api/v1/dashboard").with(user("r").roles("LECTOR")).param("desde",date).param("hasta",InventoryService.today().minusDays(1).toString())).andExpect(status().isBadRequest());}
  @Test void ratiosUseWeightedNumeratorNotAverage(){assertEquals(new BigDecimal("10.0000"),DashboardController.ratio(new BigDecimal("10"),new BigDecimal("100")));assertNull(DashboardController.ratio(BigDecimal.ONE,BigDecimal.ZERO));}
+ UUID movement(UUID lot,String type){return db.queryForObject("SELECT id FROM inventario.movimiento WHERE lote_id=? AND tipo=? ORDER BY creado LIMIT 1",UUID.class,lot,type);}
+ UUID requestAdjustment(UUID movement,double kg,String role)throws Exception {return UUID.fromString(json.readTree(postAs("/ajustes",Map.of("movimiento",movement,"kgCorrecto",kg,"motivo","Error de digitación","documento","TEST-AJUSTE"),role,UUID.randomUUID()).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("id").asText());}
+ ResultActions resolve(UUID adjustment,boolean approved,String role)throws Exception {return postAs("/ajustes/"+adjustment+"/resolucion",Map.of("aprobado",approved,"comentario","Revisado con respaldo"),role,UUID.randomUUID());}
+ BigDecimal balance(UUID lot){return db.queryForObject("SELECT kg FROM inventario.saldo WHERE id=?",BigDecimal.class,lot);}
+ @Test void approvedReceiptCorrectionRestatesBalanceAndKpiWithoutEditingHistory()throws Exception {
+  var lot=receive("ADJ",10,100);release(lot);
+  postAs("/mermas",Map.of("lote",lot,"kg",5,"motivo","Daño","documento","TEST-MERMA"),"CALIDAD",UUID.randomUUID()).andExpect(status().isOk());
+  var adj=requestAdjustment(movement(lot,"RECEPCION"),90,"OPERADOR");
+  assertEquals(95,balance(lot).intValue(),"Pendiente no altera saldo");assertEquals(5.0,dashboard().at("/actual/merma").asDouble());
+  resolve(adj,true,"SUPERVISOR").andExpect(status().isOk());
+  assertEquals(85,balance(lot).intValue());var d=dashboard();assertEquals(90,d.at("/actual/ingreso").asDouble());assertEquals(new BigDecimal("5.5556"),d.at("/actual/merma").decimalValue());
+  assertEquals(100,db.queryForObject("SELECT kg FROM inventario.movimiento WHERE lote_id=? AND tipo='RECEPCION'",BigDecimal.class,lot).intValue(),"El hecho original se conserva");
+  resolve(adj,true,"SUPERVISOR").andExpect(status().isConflict());
+ }
+ @Test void rejectedAdjustmentKeepsQuantityAndAnnulledDispatchLeavesFefoDenominator()throws Exception {
+  var lot=receive("ANUL",10,50);release(lot);postAs("/despachos",dispatch(20),"OPERADOR",UUID.randomUUID()).andExpect(status().isOk());
+  var dispatchLine=movement(lot,"DESPACHO");
+  resolve(requestAdjustment(dispatchLine,10,"OPERADOR"),false,"SUPERVISOR").andExpect(status().isOk());assertEquals(30,balance(lot).intValue());
+  resolve(requestAdjustment(dispatchLine,0,"OPERADOR"),true,"SUPERVISOR").andExpect(status().isOk());
+  assertEquals(50,balance(lot).intValue());assertEquals(0,dashboard().at("/actual/lineas").asInt());
+ }
+ @Test void adjustmentRulesSegregationAndNonNegativeBalance()throws Exception {
+  var lot=receive("RULES",10,100);release(lot);postAs("/despachos",dispatch(60),"OPERADOR",UUID.randomUUID()).andExpect(status().isOk());
+  var receipt=movement(lot,"RECEPCION");
+  postAs("/ajustes",Map.of("movimiento",receipt,"kgCorrecto",30,"motivo","Saldo negativo","documento","T"),"OPERADOR",UUID.randomUUID()).andExpect(status().isConflict());
+  postAs("/ajustes",Map.of("movimiento",movement(lot,"DESPACHO"),"kgCorrecto",70,"motivo","Aumento","documento","T"),"OPERADOR",UUID.randomUUID()).andExpect(status().isBadRequest());
+  postAs("/ajustes",Map.of("movimiento",receipt,"kgCorrecto",90,"motivo","Rol","documento","T"),"CALIDAD",UUID.randomUUID()).andExpect(status().isForbidden());
+  var adj=requestAdjustment(receipt,90,"OPERADOR");
+  postAs("/ajustes",Map.of("movimiento",receipt,"kgCorrecto",80,"motivo","Duplicado","documento","T"),"OPERADOR",UUID.randomUUID()).andExpect(status().isConflict());
+  resolve(adj,true,"OPERADOR").andExpect(status().isForbidden());resolve(adj,true,"CALIDAD").andExpect(status().isForbidden());
+  mvc.perform(post("/api/v1/ajustes/"+adj+"/resolucion").with(user("operador").roles("SUPERVISOR","LECTOR")).header("X-Requested-With","SIS-SOFIA").header("Idempotency-Key",UUID.randomUUID()).contentType("application/json").content(json.writeValueAsBytes(Map.of("aprobado",true,"comentario","Autoaprobación")))).andExpect(status().isConflict());
+  assertEquals(40,balance(lot).intValue());
+  assertThrows(Exception.class,()->db.update("DELETE FROM inventario.ajuste WHERE id=?",adj));
+ }
  @Test void actualPasswordAuthentication()throws Exception {
   mvc.perform(get("/api/v1/me").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("consulta",env.getProperty("sofia.reader-password")))).andExpect(status().isOk()).andExpect(jsonPath("$.usuario").value("consulta"));
   mvc.perform(get("/api/v1/me").with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic("consulta","incorrecta"))).andExpect(status().isUnauthorized());

@@ -12,3 +12,4 @@ backups/
 .idea/
 .vscode/
 work/
+.claude/

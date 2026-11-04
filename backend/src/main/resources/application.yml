@@ -22,3 +22,4 @@ sofia:
   operator-password: ${OPERATOR_PASSWORD}
   quality-password: ${QUALITY_PASSWORD}
   reader-password: ${READER_PASSWORD}
+  supervisor-password: ${SUPERVISOR_PASSWORD}

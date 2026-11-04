@@ -21,6 +21,7 @@ services:
       OPERATOR_PASSWORD: ${OPERATOR_PASSWORD:?requerida}
       QUALITY_PASSWORD: ${QUALITY_PASSWORD:?requerida}
       READER_PASSWORD: ${READER_PASSWORD:?requerida}
+      SUPERVISOR_PASSWORD: ${SUPERVISOR_PASSWORD:?Ejecute scripts/init de nuevo}
     ports: ["127.0.0.1:8091:8080"]
     depends_on:
       db: {condition: service_healthy}
@@ -28,5 +29,46 @@ services:
     build: ./frontend
     ports: ["127.0.0.1:8088:80"]
     depends_on: [backend]
+  # Pila de demostración (perfil "demo"): base sofia_demo con 90 días simulados, en http://localhost:8089.
+  #   docker compose --profile demo up -d --build
+  # Orden: demo-db crea la base → backend-demo aplica Flyway → demo-seed carga los datos si está vacía.
+  demo-db:
+    profiles: [demo]
+    image: postgres:16-alpine
+    environment:
+      PGHOST: db
+      PGUSER: sofia
+      PGPASSWORD: ${DB_PASSWORD:?requerida}
+    entrypoint: ["sh","-c","psql -d sofia -tAc \"SELECT 1 FROM pg_database WHERE datname='sofia_demo'\" | grep -q 1 || createdb sofia_demo"]
+    depends_on:
+      db: {condition: service_healthy}
+  demo-seed:
+    profiles: [demo]
+    build: ./demo
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD:?requerida}
+    depends_on:
+      backend-demo: {condition: service_started}
+  backend-demo:
+    profiles: [demo]
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sofia_demo
+      DB_USER: sofia
+      DB_PASSWORD: ${DB_PASSWORD:?requerida}
+      OPERATOR_PASSWORD: ${OPERATOR_PASSWORD:?requerida}
+      QUALITY_PASSWORD: ${QUALITY_PASSWORD:?requerida}
+      READER_PASSWORD: ${READER_PASSWORD:?requerida}
+      SUPERVISOR_PASSWORD: ${SUPERVISOR_PASSWORD:?requerida}
+    ports: ["127.0.0.1:8092:8080"]
+    depends_on:
+      demo-db: {condition: service_completed_successfully}
+  frontend-demo:
+    profiles: [demo]
+    build: ./frontend
+    environment:
+      API_UPSTREAM: backend-demo:8080
+    ports: ["127.0.0.1:8089:80"]
+    depends_on: [backend-demo]
 volumes:
   sofia_pg:
