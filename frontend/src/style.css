@@ -185,3 +185,69 @@ footer{padding:18px 4%;font-size:12px;color:var(--muted);border-top:1px solid va
  .login{grid-template-columns:minmax(0,1fr);align-content:start}.login-brand{padding:24px 20px 22px}.login-brand h1{font-size:28px;margin-bottom:0}.login-brand>p,.login-kpis,.login-brand small{display:none}.login-brand .seal{font-size:30px;margin-bottom:22px}.login-brand::after{display:none}.login-panel{padding:28px 20px 40px}
  .value{font-size:38px}
 }
+
+/* ── Rediseño ejecutivo (regla de 5 s, patrón Z, arco narrativo) ── */
+.page-head{margin-bottom:14px}
+.headline{display:flex;align-items:center;gap:10px;margin:0 0 16px;padding:12px 16px;font-size:17px;font-weight:800;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--neutral);border-radius:6px}
+.headline i{width:10px;height:10px;border-radius:50%;background:var(--neutral);flex:none}
+.headline[data-state=good]{border-left-color:var(--good)}.headline[data-state=good] i{background:var(--good)}
+.headline[data-state=warn]{border-left-color:var(--warn)}.headline[data-state=warn] i{background:var(--warn)}
+.headline[data-state=bad]{border-left-color:var(--bad)}.headline[data-state=bad] i{background:var(--bad)}
+.top-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.kpi{border-top:3px solid var(--line-strong)}
+.kpi[data-state=good]{border-top-color:var(--good)}.kpi[data-state=warn]{border-top-color:var(--warn)}.kpi[data-state=bad]{border-top-color:var(--bad)}
+.kpi>small+small{margin-top:2px}
+.kpi.skeleton{min-height:200px;background:linear-gradient(90deg,var(--surface),var(--sunk),var(--surface));background-size:200% 100%;animation:sk 1.2s ease-in-out infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.kpi.skeleton{animation:none}}
+.filters{flex-direction:column;align-items:stretch;flex-wrap:nowrap;margin:0;gap:10px;padding:16px}
+.filters h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:0}
+.filters select,.filters input{min-width:0;width:100%}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+.filters .link{justify-self:end}
+.analysis-grid{margin-top:16px}
+.story{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.story article{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--neutral);border-radius:6px;padding:16px 18px}
+.story article[data-state=good]{border-top-color:var(--good)}.story article[data-state=warn]{border-top-color:var(--warn)}.story article[data-state=bad]{border-top-color:var(--bad)}
+.story p{font-size:14px;color:var(--ink-2);margin:0 0 8px}
+.story .step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--ink);margin-bottom:10px}
+.step span{font-family:var(--mono);width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.step em{font-family:var(--mono);font-style:normal;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400}
+.story-main{font-size:16px!important;font-weight:700;color:var(--ink)!important}
+.story ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.story li{display:flex;gap:8px;font-size:14px;line-height:1.45;color:var(--ink)}
+.story li i{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:var(--neutral)}
+.story li[data-state=bad] i{background:var(--bad)}.story li[data-state=warn] i{background:var(--warn)}.story li[data-state=good] i{background:var(--good)}
+@media(max-width:1100px){.top-grid{grid-template-columns:minmax(0,1fr)}.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.filters h2{grid-column:1/-1}}
+@media(max-width:850px){.story{grid-template-columns:minmax(0,1fr)}.headline{font-size:15px}}
+.kpi .gauge{margin-top:auto}
+
+/* Filtros: períodos rápidos + chips de filtros activos (removibles). */
+.filters{gap:12px}
+.filters-head{display:flex;align-items:center;gap:8px}
+.filters-head h2{flex:1}
+.filters-head .count{font-family:var(--mono);font-size:11px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+.filters-head .link{padding:4px 2px;font-size:13px}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:2px;background:var(--sunk);border-radius:6px}
+.presets button{background:none;color:var(--ink-2);padding:7px 4px;border-radius:4px;font-size:12.5px;font-weight:700;white-space:nowrap;min-height:34px}
+.presets button:hover{background:var(--surface)}
+.presets button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.chips{list-style:none;margin:0;padding:10px 0 0;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px}
+.chips button{display:inline-flex;align-items:center;gap:6px;background:var(--sunk);color:var(--ink);border:1px solid var(--line-strong);padding:4px 6px 4px 10px;font-size:12px;font-weight:600;border-radius:999px}
+.chips button:hover{background:var(--line)}
+.chips button span{font-size:15px;line-height:1;color:var(--muted)}
+@media(max-width:1100px){.filters-head,.presets,.chips{grid-column:1/-1}}
+
+/* Barra de filtros horizontal (contexto global antes de leer los KPIs). */
+.top-grid{grid-template-columns:minmax(0,1fr)}
+.filters{order:-1;display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:12px 14px;padding:14px 16px}
+.filters>label{flex:1 1 170px}
+.filter-row{flex:0 1 290px}
+.presets{flex:0 0 auto;grid-template-columns:repeat(4,auto)}
+.presets button{padding:7px 12px}
+.filters-head{order:10;flex:0 0 auto;min-height:38px}
+.filters-head h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.chips{flex-basis:100%;padding-top:10px}
+@media(max-width:850px){.presets{flex-basis:100%;grid-template-columns:repeat(4,1fr)}.filter-row{flex-basis:100%}.filters>label{flex:1 1 100%}.filters-head{flex-basis:100%;justify-content:flex-end}}
+.chips{order:9;flex:1 1 60%;border-top:0;padding-top:0}
+.filters-head{margin-left:auto;min-height:30px}
