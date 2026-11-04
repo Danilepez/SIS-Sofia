@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-03",
+  "tests": "UI login, conteos persistidos, KPIs, filtro cruzado, trazabilidad, logout, móvil, concurrencia HTTP",
+  "samples": 30,
+  "p50Ms": 109.33959999999934,
+  "p95Ms": 144.16609999999855,
+  "maxMs": 157.64869999999974,
+  "dataset": "Base sofia_test; registros QA identificados; sin datos empresariales",
+  "center": "8da1db60-d739-4f8a-b988-5b1769ff1ace",
+  "consoleErrors": []
+}

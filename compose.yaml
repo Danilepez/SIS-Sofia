@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sofia
+      POSTGRES_USER: sofia
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Ejecute scripts/init.ps1}
+    ports: ["127.0.0.1:5433:5432"]
+    volumes: ["sofia_pg:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sofia -d sofia"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/sofia
+      DB_USER: sofia
+      DB_PASSWORD: ${DB_PASSWORD:?requerida}
+      OPERATOR_PASSWORD: ${OPERATOR_PASSWORD:?requerida}
+      QUALITY_PASSWORD: ${QUALITY_PASSWORD:?requerida}
+      READER_PASSWORD: ${READER_PASSWORD:?requerida}
+    ports: ["127.0.0.1:8091:8080"]
+    depends_on:
+      db: {condition: service_healthy}
+  frontend:
+    build: ./frontend
+    ports: ["127.0.0.1:8088:80"]
+    depends_on: [backend]
+volumes:
+  sofia_pg:

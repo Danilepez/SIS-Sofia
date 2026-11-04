@@ -1,0 +1,3 @@
+JUnit: 13 ejecutadas; 0 fallos; 0 errores; 0 omitidas.
+Frontend: build correcto; npm audit 0 vulnerabilidades.
+Base normal: 0 productos y 0 movimientos al entregar.

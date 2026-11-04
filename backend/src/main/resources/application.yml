@@ -1,0 +1,24 @@
+server:
+  port: ${PORT:8080}
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/sofia}
+    username: ${DB_USER:sofia}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: America/La_Paz
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+sofia:
+  operator-password: ${OPERATOR_PASSWORD}
+  quality-password: ${QUALITY_PASSWORD}
+  reader-password: ${READER_PASSWORD}
